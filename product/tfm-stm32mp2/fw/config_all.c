@@ -436,15 +436,15 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
 
 #ifdef CFG_SCPFW_MOD_TFM_SMT
     tfm_smt_elt = fwk_mm_calloc(scpfw_resource_counter.channel_count + 1,
-                                  sizeof(*tfm_smt_elt));
+                                sizeof(*tfm_smt_elt));
     tfm_smt_data = fwk_mm_calloc(scpfw_resource_counter.channel_count,
-                                   sizeof(*tfm_smt_data));
+                                 sizeof(*tfm_smt_data));
 #endif
 
     tfm_mbx_elt = fwk_mm_calloc(scpfw_resource_counter.channel_count + 1,
-                                  sizeof(*tfm_mbx_elt));
+                                sizeof(*tfm_mbx_elt));
     tfm_mbx_data = fwk_mm_calloc(scpfw_resource_counter.channel_count,
-                                   sizeof(*tfm_mbx_data));
+                                 sizeof(*tfm_mbx_data));
 
     /* Set now the uniqnue scmi module instance configuration data */
     scmi_data = (struct mod_scmi_config){
@@ -464,7 +464,8 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
         scmi_agent_table[agent_index].name = agent_cfg->name;
 
         for (j = 0; j < agent_cfg->channel_count; j++) {
-            struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
+            struct scpfw_channel_config *channel_cfg =
+                agent_cfg->channel_config + j;
             struct mod_scmi_service_config *service_data;
 
             service_data = fwk_mm_calloc(1, sizeof(*service_data));
@@ -472,32 +473,44 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
             scmi_service_elt[channel_index].data = service_data;
 
             tfm_mbx_elt[channel_index].name = channel_cfg->name;
-            tfm_mbx_elt[channel_index].data = (void *)(tfm_mbx_data + channel_index);
+            tfm_mbx_elt[channel_index].data = (void *)(tfm_mbx_data +
+                                                       channel_index);
             switch  (agent_cfg->agent_id) {
 #ifdef CFG_SCPFW_MOD_MSG_SMT
             case STM32MP25_AGENT_ID_M33_NS:
                 *service_data = (struct mod_scmi_service_config){
-                    .transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, msg_smt_index),
-                    .transport_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
-                                                                  MOD_MSG_SMT_API_IDX_SCMI_TRANSPORT),
+                    .transport_id = (fwk_id_t)
+                        FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT,
+                                            msg_smt_index),
+                    .transport_api_id = (fwk_id_t)
+                        FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
+                                        MOD_MSG_SMT_API_IDX_SCMI_TRANSPORT),
+                    .transport_notification_init_id = FWK_ID_NONE_INIT,
                     .scmi_agent_id = agent_cfg->agent_id,
                     .scmi_p2a_id = FWK_ID_NONE_INIT,
                 };
 
                 msg_smt_elt[msg_smt_index].name = channel_cfg->name;
-                msg_smt_elt[msg_smt_index].data = (void *)(msg_smt_data + msg_smt_index);
+                msg_smt_elt[msg_smt_index].data = (void *)(msg_smt_data +
+                                                           msg_smt_index);
 
-                msg_smt_data[msg_smt_index] = (struct mod_msg_smt_channel_config){
-                    .type = MOD_MSG_SMT_CHANNEL_TYPE_REQUESTER,
-                    .mailbox_size = 128,
-                    .driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_MBX,
-                                                               channel_index),
-                    .driver_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_MBX, 0),
-                };
-                tfm_mbx_data[channel_index] = (struct mod_tfm_mbx_channel_config){
-                    .driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, msg_smt_index),
-                    .driver_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
-                                                               MOD_MSG_SMT_API_IDX_DRIVER_INPUT),
+                msg_smt_data[msg_smt_index] =
+                    (struct mod_msg_smt_channel_config){ .type =
+                        MOD_MSG_SMT_CHANNEL_TYPE_REQUESTER,.mailbox_size = 128,
+                        .driver_id = (fwk_id_t)
+                            FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_MBX,
+                                                channel_index),
+                        .driver_api_id = (fwk_id_t)
+                            FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_MBX, 0),
+                    };
+                tfm_mbx_data[channel_index] =
+                    (struct mod_tfm_mbx_channel_config){
+                    .driver_id = (fwk_id_t)
+                        FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT,
+                                            msg_smt_index),
+                    .driver_api_id = (fwk_id_t)
+                        FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
+                                        MOD_MSG_SMT_API_IDX_DRIVER_INPUT),
                 };
                 msg_smt_index++;
                 break;
@@ -506,31 +519,39 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
             case STM32MP25_AGENT_ID_CA35 :
             case STM32MP25_AGENT_ID_CA35_BL31:
                 *service_data = (struct mod_scmi_service_config){
-                    .transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_SMT, tfm_smt_index),
-                    .transport_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_SMT,
-                                                                  MOD_TFM_SMT_API_IDX_SCMI_TRANSPORT),
+                    .transport_id = (fwk_id_t)
+                        FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_SMT,
+                                            tfm_smt_index),
+                    .transport_api_id = (fwk_id_t)
+                        FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_SMT,
+                                        MOD_TFM_SMT_API_IDX_SCMI_TRANSPORT),
+                    .transport_notification_init_id = FWK_ID_NONE_INIT,
                     .scmi_agent_id = agent_cfg->agent_id,
                     .scmi_p2a_id = FWK_ID_NONE_INIT,
                 };
 
                 tfm_smt_elt[tfm_smt_index].name = channel_cfg->name;
-                tfm_smt_elt[tfm_smt_index ].data = (void *)(tfm_smt_data + tfm_smt_index);
-
+                tfm_smt_elt[tfm_smt_index ].data = (void *)(tfm_smt_data +
+                                                            tfm_smt_index);
                 tfm_smt_data[tfm_smt_index] = (struct mod_tfm_smt_channel_config){
                     .type = MOD_TFM_SMT_CHANNEL_TYPE_REQUESTER,
-                        .policies = MOD_SMT_POLICY_NONE,
-                        .mailbox_address = (unsigned int)channel_cfg->shm.area,
-                        .mailbox_size = 128,
-                        .driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_MBX,
-                                                                   channel_index),
-                        .driver_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_MBX, 0),
+                    .policies = MOD_SMT_POLICY_NONE,
+                    .mailbox_address = (unsigned int)channel_cfg->shm.area,
+                    .mailbox_size = 128,
+                    .driver_id = (fwk_id_t)
+                        FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_MBX, channel_index),
+                    .driver_api_id = (fwk_id_t)
+                        FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_MBX, 0),
                 };
 
                 tfm_mbx_data[channel_index] =
                     (struct mod_tfm_mbx_channel_config){
-                        .driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_SMT, tfm_smt_index),
-                        .driver_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_SMT,
-                                                                   MOD_TFM_SMT_API_IDX_DRIVER_INPUT),
+                        .driver_id = (fwk_id_t)
+                            FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_TFM_SMT,
+                                                tfm_smt_index),
+                        .driver_api_id = (fwk_id_t)
+                            FWK_ID_API_INIT(FWK_MODULE_IDX_TFM_SMT,
+                                            MOD_TFM_SMT_API_IDX_DRIVER_INPUT),
                         .chan_mbx = channel_cfg->chan_mbx,
                     };
                 tfm_smt_index++;

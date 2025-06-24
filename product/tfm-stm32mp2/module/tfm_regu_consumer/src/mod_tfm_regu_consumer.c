@@ -51,9 +51,6 @@ static int find_ctx(fwk_id_t dev_id,
     if (!fwk_module_is_valid_element_id(dev_id))
         return FWK_E_PARAM;
 
-    if (!ctx->dev)
-        return FWK_E_ACCESS;
-
     *out_ctx = ctx;
 
     return FWK_SUCCESS;
@@ -70,6 +67,12 @@ static int tfm_regu_consumer_get_config(fwk_id_t dev_id, uint8_t *mode_type,
         return ret;
 
     *mode_type = MOD_VOLTD_MODE_TYPE_ARCH;
+
+    if (ctx->dev == NULL) {
+        *mode_id = MOD_VOLTD_MODE_ID_OFF;
+
+        return FWK_SUCCESS;
+    }
 
     if (ctx->enabled)
         *mode_id = MOD_VOLTD_MODE_ID_ON;
@@ -136,6 +139,12 @@ static int tfm_regu_consumer_get_level(fwk_id_t dev_id, int32_t *level_uv)
     if (ret)
         return ret;
 
+    if (ctx->dev == NULL) {
+        *level_uv = 0;
+
+        return FWK_SUCCESS;
+    }
+
     if (regulator_get_voltage(ctx->dev, level_uv))
         return FWK_E_PANIC;
 
@@ -153,6 +162,9 @@ static int tfm_regu_consumer_set_level(fwk_id_t dev_id, int32_t level_uv)
     ret = find_ctx(dev_id, &ctx);
     if (ret)
         return ret;
+
+    if (ctx->dev == NULL)
+        return FWK_E_ACCESS;
 
     if (regulator_set_voltage(ctx->dev, level_uv, level_uv))
         return FWK_E_DEVICE;
@@ -173,7 +185,10 @@ static int tfm_regu_consumer_get_info(fwk_id_t dev_id,
     int32_t volt_uv[2];
 
     ret = find_ctx(dev_id, &ctx);
-    if (ret == FWK_E_ACCESS) {
+    if (ret != FWK_SUCCESS)
+        return ret;
+
+    if (ctx->dev == NULL) {
         static const char reserved[] = "reserved";
 
         memset(info, 0, sizeof(*info));
@@ -184,8 +199,6 @@ static int tfm_regu_consumer_get_info(fwk_id_t dev_id,
         info->level_range.max_uv = 0;
 
         return FWK_SUCCESS;
-    } else if (ret != FWK_SUCCESS) {
-        return ret;
     }
 
     full_count = regulator_count_voltages(ctx->dev);

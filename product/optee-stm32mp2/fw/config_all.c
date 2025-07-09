@@ -284,7 +284,7 @@ struct fwk_module_config config_optee_voltd_regulator = {
 #endif
 
 #ifdef CFG_SCPFW_MOD_DVFS
-/* Config data for scmi_perf and dvfs  module */
+/* Config data for scmi_perf and dvfs module */
 struct fwk_module_config config_scmi_perf = {
     .data = &((struct mod_scmi_perf_config){
         .domains = NULL,			/* Allocated during initialization */
@@ -457,6 +457,8 @@ static void allocate_global_resources(struct scpfw_config *cfg)
     struct mod_scmi_reset_domain_config *scmi_reset_config __maybe_unused;
     struct mod_scmi_voltd_config *scmi_voltd_config __maybe_unused;
     struct mod_scmi_clock_config *scmi_clock_config __maybe_unused;
+    struct mod_scmi_perf_config *scmi_perf_data __maybe_unused;
+
     /* @cfg does not consider agent #0 this the reserved platform/server agent */
     size_t __maybe_unused scmi_agent_count = cfg->agent_count + 1;
 
@@ -521,6 +523,15 @@ static void allocate_global_resources(struct scpfw_config *cfg)
 
     scmi_perf_domain_data = fwk_mm_calloc(scpfw_resource_counter.dvfs_count,
                                           sizeof(*scmi_perf_domain_data));
+
+    /*
+     * DVFS with SCMI performance management domains
+     * 1 initial scmi_perf instance defines the number of DVFS's
+     */
+    scmi_perf_data = (void *)config_scmi_perf.data;
+    scmi_perf_data->domains = (struct mod_scmi_perf_domain_config (*)[])
+        scmi_perf_domain_data;
+    scmi_perf_data->perf_doms_count = scpfw_resource_counter.dvfs_count;
 #endif
 
 #ifdef CFG_SCPFW_MOD_VOLTAGE_DOMAIN
@@ -895,28 +906,7 @@ static void set_resources(struct scpfw_config *cfg)
                 size_t dvfs_index = scpfw_resource_counter.dvfs_index;
 
                 for (k = 0; k < channel_cfg->perfd_count; k++) {
-                    struct mod_scmi_perf_config *scmi_perf_data = NULL;
                     struct scmi_perfd *perfd_cfg = channel_cfg->perfd + k;
-
-                    /*
-                     * DVFS with SCMI performance management domains
-                     * 1 initial scmi_perf instance defines the number of DVFS's
-                     * For each DVFS instance:
-                     * - 1 instance (elt/config) of dvfs, psu, optee/psu, clock, optee/clock
-                     * Clocks and optee/clocks are already allocated but not yet set.
-                     */
-
-                    /* scmi_perf: data defines the DVFS domains indices */
-                    scmi_perf_domain_data[dvfs_index] = (struct mod_scmi_perf_domain_config){ };
-
-                    scmi_perf_data = (void *)config_scmi_perf.data;
-
-                    scmi_perf_data[dvfs_index].domains = (void *)scmi_perf_domain_data;
-                    scmi_perf_data[dvfs_index].perf_doms_count = scpfw_resource_counter.dvfs_count;
-                    scmi_perf_data[dvfs_index].fast_channels_alarm_id = (fwk_id_t)FWK_ID_NONE_INIT;
-#ifdef BUILD_HAS_MOD_STATISTICS
-                    scmi_perf_data[dvfs_index].stats_enabled = true;
-#endif
 
                     /* dvfs instances: 1 instance per expose DVFS service */
                     dvfs_data[dvfs_index].psu_id =

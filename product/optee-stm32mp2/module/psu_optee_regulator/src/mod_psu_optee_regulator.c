@@ -28,11 +28,10 @@
 /* Module context */
 struct psu_optee_regulator_ctx {
     struct mod_psu_optee_regulator_dev_config *config;
-    unsigned int dev_count;
 };
 
 /* A single instance handles all voltage regulators abstracted by regulator.h */
-static struct psu_optee_regulator_ctx module_ctx;
+static struct psu_optee_regulator_ctx *module_ctx;
 
 static char __maybe_unused *psu_regulator_name(struct regulator *regulator)
 {
@@ -44,13 +43,10 @@ static char __maybe_unused *psu_regulator_name(struct regulator *regulator)
 
 static struct regulator *get_regulator(fwk_id_t id)
 {
-    unsigned int elt_index;
+    struct psu_optee_regulator_ctx *ctx =
+        module_ctx + fwk_id_get_element_idx(id);
 
-    elt_index = fwk_id_get_element_idx(id);
-    if (elt_index >= module_ctx.dev_count)
-        return NULL;
-
-    return module_ctx.config[elt_index].regulator;
+    return ctx->config->regulator;
 }
 
 /*
@@ -144,6 +140,8 @@ static int psu_optee_regulator_init(fwk_id_t module_id,
                                     unsigned int element_count,
                                     const void *data)
 {
+    module_ctx = fwk_mm_calloc(element_count, sizeof(*module_ctx));
+
     return FWK_SUCCESS;
 }
 
@@ -151,10 +149,12 @@ static int psu_optee_regulator_element_init(fwk_id_t element_id,
                                             unsigned int sub_element_count,
                                             const void *data)
 {
+    struct psu_optee_regulator_ctx *ctx =
+        module_ctx + fwk_id_get_element_idx(element_id);
+
     fwk_assert(data != NULL);
 
-    module_ctx.config = (struct mod_psu_optee_regulator_dev_config *)data;
-    module_ctx.dev_count = sub_element_count;
+    ctx->config = (struct mod_psu_optee_regulator_dev_config *)data;
 
     return FWK_SUCCESS;
 }

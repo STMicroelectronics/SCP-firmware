@@ -12,7 +12,9 @@
 #include <fwk_log.h>
 #include <mod_scmi.h>
 #include <mod_scmi_system_power.h>
+#ifdef BUILD_HAS_MOD_TIMER
 #include <mod_timer.h>
+#endif
 
 #include <fwk_assert.h>
 #include <fwk_attributes.h>
@@ -36,8 +38,10 @@ struct mod_scmi_sys_power_ctx {
     const struct mod_scmi_from_protocol_api *scmi_api;
     const struct mod_pd_restricted_api *pd_api;
     fwk_id_t system_power_domain_id;
+#ifdef BUILD_HAS_MOD_TIMER
     bool start_graceful_process;
     struct mod_timer_alarm_api *alarm_api;
+#endif
 #ifdef BUILD_HAS_SCMI_NOTIFICATIONS
     unsigned int agent_count;
     fwk_id_t *system_power_notifications;
@@ -170,6 +174,7 @@ static void scmi_sys_power_state_notify(fwk_id_t service_id,
 }
 #endif
 
+#ifdef BUILD_HAS_MOD_TIMER
 static void graceful_timer_callback(uintptr_t mod_scmi_system_state)
 {
     enum mod_pd_system_shutdown system_shutdown;
@@ -190,6 +195,7 @@ static void graceful_timer_callback(uintptr_t mod_scmi_system_state)
         }
     }
 }
+#endif
 
 /*
  * PROTOCOL_VERSION
@@ -602,11 +608,10 @@ FWK_WEAK int scmi_sys_power_state_set_policy(
     fwk_id_t service_id,
     bool graceful)
 {
-    int status;
-
     *policy_status = MOD_SCMI_SYS_POWER_EXECUTE_MESSAGE_HANDLER;
 
     if (graceful) {
+#ifdef BUILD_HAS_MOD_TIMER
         *policy_status = MOD_SCMI_SYS_POWER_SKIP_MESSAGE_HANDLER;
 
         if (!scmi_sys_power_ctx.start_graceful_process) {
@@ -621,7 +626,7 @@ FWK_WEAK int scmi_sys_power_state_set_policy(
 #endif
 
             if (scmi_sys_power_ctx.alarm_api != NULL) {
-                status = scmi_sys_power_ctx.alarm_api->start(
+                int status = scmi_sys_power_ctx.alarm_api->start(
                     scmi_sys_power_ctx.config->alarm_id,
                     scmi_sys_power_ctx.config->graceful_timeout,
                     MOD_TIMER_ALARM_TYPE_ONCE,
@@ -634,6 +639,9 @@ FWK_WEAK int scmi_sys_power_state_set_policy(
                 graceful_timer_callback(*state);
             }
         }
+#else
+        return FWK_E_SUPPORT;
+#endif
     }
 
     return FWK_SUCCESS;
@@ -745,7 +753,9 @@ static int scmi_sys_power_init(fwk_id_t module_id, unsigned int element_count,
                                const void *data)
 {
     scmi_sys_power_ctx.config = data;
+#ifdef BUILD_HAS_MOD_TIMER
     scmi_sys_power_ctx.start_graceful_process = false;
+#endif
 
     return FWK_SUCCESS;
 }
@@ -819,6 +829,7 @@ static int scmi_sys_power_bind(fwk_id_t id, unsigned int round)
         FWK_ID_ELEMENT(FWK_MODULE_IDX_POWER_DOMAIN, pd_count - 1);
 
 #ifdef BUILD_HAS_SCMI_NOTIFICATIONS
+#ifdef BUILD_HAS_MOD_TIMER
     /*
      * If notifications is supported a timer is required to handle graceful
      * requests.
@@ -833,6 +844,9 @@ static int scmi_sys_power_bind(fwk_id_t id, unsigned int round)
         }
         return scmi_sys_power_init_notifications();
     }
+#else
+    return scmi_sys_power_init_notifications();
+#endif
 #endif
     return FWK_SUCCESS;
 }

@@ -244,6 +244,17 @@ static int mbx_start(fwk_id_t id)
     return FWK_SUCCESS;
 }
 
+static int mbx_process_event(const struct fwk_event *event,
+                             struct fwk_event *resp_event)
+{
+    return FWK_SUCCESS;
+}
+static int mbx_process_notification(const struct fwk_event *event,
+                                    struct fwk_event *resp_event)
+{
+    return FWK_SUCCESS;
+}
+
 /* TFM_MBX module definition */
 const struct fwk_module module_tfm_mbx = {
     .type = FWK_MODULE_TYPE_DRIVER,
@@ -253,4 +264,6 @@ const struct fwk_module module_tfm_mbx = {
     .bind = mbx_bind,
     .start = mbx_start,
     .process_bind_request = mbx_process_bind_request,
+    .process_event = mbx_process_event,
+    .process_notification = mbx_process_notification,
 };

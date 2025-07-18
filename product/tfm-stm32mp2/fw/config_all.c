@@ -438,6 +438,12 @@ static void allocate_global_resources(struct scpfw_config *cfg)
 #endif
 }
 
+const static int agent_type[] = {
+    [STM32MP25_AGENT_ID_M33_NS] = SCMI_AGENT_TYPE_MANAGEMENT,
+    [STM32MP25_AGENT_ID_CA35] = SCMI_AGENT_TYPE_OSPM,
+    [STM32MP25_AGENT_ID_CA35_BL31] = SCMI_AGENT_TYPE_PSCI
+};
+
 static void set_scmi_comm_resources(struct scpfw_config *cfg)
 {
     unsigned int channel_index;
@@ -491,7 +497,7 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
         struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
         size_t agent_index = i + 1;
 
-        scmi_agent_table[agent_index].type = SCMI_AGENT_TYPE_OSPM;
+        scmi_agent_table[agent_index].type = agent_type[agent_cfg->agent_id];
         scmi_agent_table[agent_index].name = agent_cfg->name;
 
         for (j = 0; j < agent_cfg->channel_count; j++) {

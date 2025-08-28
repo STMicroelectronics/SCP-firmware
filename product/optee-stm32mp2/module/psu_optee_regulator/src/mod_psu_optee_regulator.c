@@ -27,7 +27,7 @@
 
 /* Module context */
 struct psu_optee_regulator_ctx {
-    struct mod_psu_optee_regulator_dev_config *config;
+    struct regulator *regulator;
     struct {
         bool enabled;
         uint32_t voltage;
@@ -37,14 +37,6 @@ struct psu_optee_regulator_ctx {
 /* A single instance handles all voltage regulators abstracted by regulator.h */
 static struct psu_optee_regulator_ctx *module_ctx;
 
-static struct regulator *get_regulator(fwk_id_t id)
-{
-    struct psu_optee_regulator_ctx *ctx =
-        module_ctx + fwk_id_get_element_idx(id);
-
-    return ctx->config->regulator;
-}
-
 /*
  * Driver functions for the PSU API
  */
@@ -53,9 +45,8 @@ static int psu_optee_regulator_set_enabled(fwk_id_t id, bool enabled)
     struct psu_optee_regulator_ctx *ctx =
         module_ctx + fwk_id_get_element_idx(id);
     TEE_Result res = TEE_ERROR_GENERIC;
-    struct regulator *regulator;
+    struct regulator *regulator = ctx->regulator;
 
-    regulator = get_regulator(id);
     if (!regulator) {
         ctx->fake_state.enabled = enabled;
 
@@ -78,13 +69,12 @@ static int psu_optee_regulator_get_enabled(fwk_id_t id, bool *enabled)
 {
     struct psu_optee_regulator_ctx *ctx =
         module_ctx + fwk_id_get_element_idx(id);
-    struct regulator *regulator;
+    struct regulator *regulator = ctx->regulator;
 
     if (enabled == NULL) {
         return FWK_E_PARAM;
     }
 
-    regulator = get_regulator(id);
     if (!regulator) {
        *enabled = ctx->fake_state.enabled;
 
@@ -104,9 +94,8 @@ static int psu_optee_regulator_set_voltage(fwk_id_t id, uint32_t voltage)
     struct psu_optee_regulator_ctx *ctx =
         module_ctx + fwk_id_get_element_idx(id);
     TEE_Result res = TEE_ERROR_GENERIC;
-    struct regulator *regulator;
+    struct regulator *regulator = ctx->regulator;
 
-    regulator = get_regulator(id);
     if (!regulator) {
         ctx->fake_state.voltage = voltage;
 
@@ -125,14 +114,13 @@ static int psu_optee_regulator_get_voltage(fwk_id_t id, uint32_t *voltage)
 {
     struct psu_optee_regulator_ctx *ctx =
         module_ctx + fwk_id_get_element_idx(id);
-    struct regulator *regulator;
+    struct regulator *regulator = ctx->regulator;
     int level_mv;
 
     if (voltage == NULL) {
         return FWK_E_PARAM;
     }
 
-    regulator = get_regulator(id);
     if (!regulator) {
         *voltage = ctx->fake_state.voltage;
 
@@ -171,10 +159,11 @@ static int psu_optee_regulator_element_init(fwk_id_t element_id,
 {
     struct psu_optee_regulator_ctx *ctx =
         module_ctx + fwk_id_get_element_idx(element_id);
+    const struct mod_psu_optee_regulator_dev_config *config = data;
 
-    fwk_assert(data != NULL);
+    fwk_assert(config != NULL);
 
-    ctx->config = (struct mod_psu_optee_regulator_dev_config *)data;
+    ctx->regulator = config->regulator;
 
     return FWK_SUCCESS;
 }

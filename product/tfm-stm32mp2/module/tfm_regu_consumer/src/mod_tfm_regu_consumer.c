@@ -18,6 +18,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#define MOD_NAME "[TFM SCMI VOLTD] "
+
 /* Device context */
 struct tfm_regu_consumer_dev_ctx {
     struct device *dev;
@@ -264,9 +266,9 @@ static int tfm_voltd_regulator_level_from_index(fwk_id_t dev_id,
     }
     *level_uv = volt_uv;
 
-    FWK_LOG_DEBUG(
-                  MOD_PREFIX "Get level from index for %u/%s: index %u, level %"PRId32"uV",
-                  fwk_id_get_element_idx(dev_id), regulator_name(ctx->dev),
+    FWK_LOG_DEBUG(MOD_NAME
+                  "Get level from index for %u/%s: index %u, level %"PRId32"uV",
+                  fwk_id_get_element_idx(dev_id), regu_name(ctx->dev),
                   index, *level_uv);
 
     return FWK_SUCCESS;

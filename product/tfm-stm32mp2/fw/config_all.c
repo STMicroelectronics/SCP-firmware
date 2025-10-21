@@ -660,7 +660,31 @@ static void set_scmi_comm_resources(struct scpfw_config *cfg)
 static void set_resources(struct scpfw_config *cfg)
 {
     size_t i, j, k;
+#ifdef CFG_SCPFW_MOD_POWER_DOMAIN
+    size_t system_index = scpfw_resource_counter.pd_count; /* Last element */
+    struct fwk_element *pd_elt_sys = pd_elt + system_index;
+    struct mod_power_domain_element_config *pd_elt_data_sys =
+        fwk_mm_calloc(1, sizeof(*pd_elt_data_sys));
+    struct fwk_element *stm32_pd_elt_sys = stm32_pd_elt + system_index;
 
+    /* Data are unused but framework doesn't accept NULL data */
+    stm32_pd_elt_sys->name = "system";
+    stm32_pd_elt_sys->data = (void *)1;
+
+    pd_elt_sys->name = stm32_pd_elt_sys->name;
+
+    pd_elt_data_sys->parent_idx = PD_STATIC_DEV_IDX_NONE;
+    pd_elt_data_sys->driver_id =
+        (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, system_index);
+    pd_elt_data_sys->api_id =
+        (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD, 0);
+    pd_elt_data_sys->attributes.pd_type = MOD_PD_TYPE_DEVICE;
+    pd_elt_data_sys->allowed_state_mask_table =
+        pd_allowed_state_mask_table;
+    pd_elt_data_sys->allowed_state_mask_table_size =
+        FWK_ARRAY_SIZE(pd_allowed_state_mask_table);
+    pd_elt_sys->data = pd_elt_data_sys;
+#endif
     for (i = 0; i < cfg->agent_count; i++) {
         struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
         size_t agent_index = i + 1;
@@ -817,38 +841,14 @@ static void set_resources(struct scpfw_config *cfg)
 #endif
 #ifdef CFG_SCPFW_MOD_POWER_DOMAIN
             if (channel_cfg->pd_count) {
-                /* System domain */
-                size_t system_index = channel_cfg->pd_count; /* Last element */
-                struct fwk_element *pd_elt_sys = pd_elt + system_index;
-                struct mod_power_domain_element_config *pd_elt_data_sys =
-                    fwk_mm_calloc(1, sizeof(*pd_elt_data_sys));
-                struct fwk_element *stm32_pd_elt_sys = stm32_pd_elt + system_index;
-
-                /* Data are unused but framework doesn't accept NULL data */
-                stm32_pd_elt_sys->name = "system";
-                stm32_pd_elt_sys->data = (void *)1;
-
-                pd_elt_sys->name = stm32_pd_elt_sys->name;
-
-                pd_elt_data_sys->parent_idx = PD_STATIC_DEV_IDX_NONE;
-                pd_elt_data_sys->driver_id =
-                    (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, system_index);
-                pd_elt_data_sys->api_id =
-                    (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD, 0);
-                pd_elt_data_sys->attributes.pd_type = MOD_PD_TYPE_DEVICE;
-                pd_elt_data_sys->allowed_state_mask_table =
-                    pd_allowed_state_mask_table;
-                pd_elt_data_sys->allowed_state_mask_table_size =
-                    FWK_ARRAY_SIZE(pd_allowed_state_mask_table);
-                pd_elt_sys->data = pd_elt_data_sys;
-
+                size_t pd_index = scpfw_resource_counter.pd_index;
                 /* Power domains */
                 for (k = 0; k < channel_cfg->pd_count; k++) {
-                    struct fwk_element *pd_elt_k = pd_elt + k;
+                    struct fwk_element *pd_elt_k = pd_elt + pd_index;
                     struct mod_power_domain_element_config *pd_elt_data_k =
                         fwk_mm_calloc(1, sizeof(*pd_elt_data_k));
                     struct fwk_element *stm32_pd_elt_k =
-                        stm32_pd_elt + k;
+                        stm32_pd_elt + pd_index;
                     struct scmi_pd *scmi_pd = channel_cfg->pd + k;
                     struct mod_stm32_pd_config *mod_stm32_pd_config =
                         fwk_mm_calloc(1, sizeof(*mod_stm32_pd_config));
@@ -866,7 +866,7 @@ static void set_resources(struct scpfw_config *cfg)
 
                     pd_elt_data_k->parent_idx = system_index;
                     pd_elt_data_k->driver_id =
-                        (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, k);
+                        (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, pd_index);
                     pd_elt_data_k->api_id =
                         (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD, 0);
                     pd_elt_data_k->attributes.pd_type = MOD_PD_TYPE_DEVICE;
@@ -875,7 +875,11 @@ static void set_resources(struct scpfw_config *cfg)
                     pd_elt_data_k->allowed_state_mask_table_size =
                         FWK_ARRAY_SIZE(pd_allowed_state_mask_table);
                     pd_elt_k->data = pd_elt_data_k;
+                    pd_index++;
+
                 }
+                scpfw_resource_counter.pd_index = pd_index;
+
             }
 #endif
         }

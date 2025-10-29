@@ -56,6 +56,18 @@ static int stm32_pd_reset(fwk_id_t pd_id)
     return FWK_E_SUPPORT;
 }
 
+static int stm32_pd_shutdown(fwk_id_t dev_id,
+                             enum mod_pd_system_shutdown system_shutdown)
+{
+    /*
+     * Since request come from scmi system power, the agent m33 ns is in charge
+     * to handle the request
+     */
+    FWK_LOG_DEBUG("[STM32_PD] %s @%d", __func__, __LINE__);
+
+    return FWK_PENDING;
+}
+
 /*
  * stm32_pd_set_state_gpu
  *
@@ -222,12 +234,14 @@ static const struct mod_pd_driver_api stm32_pd_api_gpu = {
     .set_state = stm32_pd_set_state_gpu,
     .get_state = stm32_pd_get_state,
     .reset = stm32_pd_reset,
+    .shutdown = stm32_pd_shutdown,
 };
 
 static const struct mod_pd_driver_api stm32_pd_api = {
     .set_state = stm32_pd_set_state,
     .get_state = stm32_pd_get_state,
     .reset = stm32_pd_reset,
+    .shutdown = stm32_pd_shutdown,
 };
 
 static int stm32_pd_process_bind_request(fwk_id_t requester_id,

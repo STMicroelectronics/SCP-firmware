@@ -683,7 +683,8 @@ static void set_resources(struct scpfw_config *cfg)
     pd_elt_data_sys->driver_id =
         (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, system_index);
     pd_elt_data_sys->api_id =
-        (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD, 0);
+        (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD,
+                                  MOD_STM32_PD_API_IDX_BASIC);
     pd_elt_data_sys->attributes.pd_type = MOD_PD_TYPE_DEVICE;
     pd_elt_data_sys->allowed_state_mask_table =
         pd_allowed_state_mask_table;
@@ -874,7 +875,8 @@ static void set_resources(struct scpfw_config *cfg)
                     pd_elt_data_k->driver_id =
                         (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_STM32_PD, pd_index);
                     pd_elt_data_k->api_id =
-                        (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD, 0);
+                        (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_PD,
+                                                  MOD_STM32_PD_API_IDX_GPU);
                     pd_elt_data_k->attributes.pd_type = MOD_PD_TYPE_DEVICE;
                     pd_elt_data_k->allowed_state_mask_table =
                         pd_allowed_state_mask_table;

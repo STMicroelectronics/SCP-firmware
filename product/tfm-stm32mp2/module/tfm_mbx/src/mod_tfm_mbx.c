@@ -65,12 +65,12 @@ void tfm_mbx_signal_msg_message(fwk_id_t device_id, void *in_buf,
                    FWK_MODULE_IDX_MSG_SMT);
 
         device_ctx->shm_out_size = out_size;
-        device_ctx->shmem_api.msg->signal_message(device_ctx->shmem_id,
-                                                  in_buf, in_size,
-                                                  out_buf, *out_size);
-    } else {
-        fwk_unexpected();
+        if (!device_ctx->shmem_api.msg->signal_message(device_ctx->shmem_id,
+                                                       in_buf, in_size,
+                                                       out_buf, *out_size))
+            return;
     }
+    fwk_unexpected();
 }
 #endif
 

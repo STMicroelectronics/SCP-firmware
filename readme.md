@@ -1,7 +1,27 @@
 SCP-firmware - version 2.16
 ===========================
 
-Copyright (c) 2011-2025, Arm Limited. All rights reserved.
+Copyright (c) 2011-2026, Arm Limited. All rights reserved.
+
+NOTICE on update on SCP Arm Public Repository Contribution Policy
+----------
+
+Dear Contributors,
+
+There is a change regarding Arm System Control Processor (SCP) open-source
+repository.
+
+After careful consideration, Arm has decided to transition public SCP repository
+to a read-only state. This means that we will no longer be accepting external
+contributions, including merge requests, issues, or feature submissions.
+
+Going forward, the repository will remain publicly accessible in its current form.
+Partners and contributors who wish to continue development are welcome to create
+and maintain their own downstream forks based on latest available version of the repository.
+
+We understand that this change may impact your workflows and appreciate your understanding.
+
+Thank you for your support and contributions.
 
 References
 ----------
@@ -92,9 +112,5 @@ details.
 Feedback and Support
 --------------------
 
-Arm welcomes any feedback on SCP-firmware. Please contact the maintainers (see
-maintainers.md).
-
-To request support please contact Arm by email at support@arm.com. Arm licensees
-may also contact Arm via their partner managers.
+Arm licensees may contact Arm via their partner managers.
 
